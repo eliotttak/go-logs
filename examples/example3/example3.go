@@ -14,7 +14,11 @@ func main() {
 	}
 	defer file.Close()
 
-	logger := logs.New("[LOG]", "- {{{15:04:05}}}")
-	logger.Flogf(file, "A log of one line. The number is %d", 3)
-	logger.Flog(file, "The first line.\nThe second line.")
+	logger := logs.New().
+		SetPrefix("[LOG]").
+		SetSuffix("- {{{15:04:05}}}")
+
+	logger.Log("This log will be written to the standard output.")
+	logger.Log("This one also.")
+	logger.Flog(file, "This one will be written to './example_3.txt'.")
 }

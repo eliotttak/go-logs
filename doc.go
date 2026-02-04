@@ -14,76 +14,71 @@
 // You should have received a copy of the GNU Lesser General Public License along with
 // go-logs. If not, see <https://www.gnu.org/licenses/>.
 
-// Package logs implements a basic logger system. Each log is a
-// separate paragraph, and each line has a prefix and a suffix
-// (not in the lines separating two paragraphs). The suffix are
-// padded for only one log. You can insert the timestamp in the
-// content, prefix or suffix of a log by inserting a
-// [time.Time.Format]() layout string in triple curly braces
-// (e.g. '{{{Mon. Jan. 2 2006 15:04:05}}}'). You can add colors
-// with ANSI code colors (see [github.com/eliotttak/go-ansi-colors]).
+// Package logs implements a basic logging system. Each log is a separate paragraph, and each line
+// can have a prefix and a suffix (not in the lines separating two paragraphs). The suffix are
+// padded for only one log. You can insert the timestamp in the content, prefix or suffix of a log
+// by inserting a [time.Time.Format]() layout string in triple curly braces (e.g.
+// '{{{Mon. Jan. 2 2006 15:04:05}}}'). You can change the default writer of the output, the prefix
+// and the suffix.
 //
-// Example 1 - Basics (usage, prefix, suffix, timestamp):
+// ========== Example 1 ==========
 //
-//	package main
+// This example shows you the basics of `go-logs`:
 //
-//	import "github.com/eliotttak/go-logs"
+//   - Create a logger, with a prefix and a suffix
+//   - Logging with [Logger.Log]() and [Logger.Logf]()
 //
-//	func main() {
-//		logger := logs.New("[LOG]", "- {{{15:04:05}}}")
-//		logger.Logf("A log of one line. The number is %d", 3)
-//		logger.Log("The first line.\nThe second line.")
-//	}
+// ----- Link to the file -----
 //
-//	// Output:
-//	//
-//	// [LOG] A log of one line. The number is 3 - 12:08:34
-//	//
-//	// [LOG] The first line.  - 12:08:34
-//	// [LOG] The second line. - 12:08:34
+// https://github.com/eliotttak/go-logs/blob/main/examples/example1/example1.go
 //
-// Example 2 - In a string:
+// ----- Run -----
 //
-//	package main
+//	go run github.com/eliotttak/go-logs/examples/example1@latest
 //
-//	import (
-//		"github.com/eliotttak/go-logs"
-//		"fmt"
-//	)
+// Run it online at https://go.dev/play/p/1TyDL0V84jJ
 //
-//	func main() {
-//		logger := logs.New("[LOG]", "- {{{15:04:05}}}")
-//		s := logger.Slogf("A log of one line. The number is %d", 3)
-//		s += logger.Slog("The first line.\nThe second line.")
-//		fmt.Print(s)
-//	}
+// ========== Example 2 ==========
 //
-//	// The output is the same as above, but you can see that the log passes by a string before being displayed.
+// This example shows you how to log in a string using [Logger.Slog]
+// and [Logger.Slogf].
 //
-// Example 3 - In a buffer (file, STDERR, etc.):
+// ----- Link to the file -----
 //
-//	package main
+// https://github.com/eliotttak/go-logs/blob/main/examples/example3/example2.go
 //
-//	import (
-//		"log"
-//		"os"
+// ----- Run -----
 //
-//		"github.com/eliotttak/go-logs"
-//	)
+//	go run github.com/eliotttak/go-logs/examples/example2@latest
 //
-//	func main() {
-//		file, err := os.Create("example_3.txt")
-//		if err != nil {
-//			log.Fatal(err)
-//		}
-//		defer file.Close()
+// Run it online at https://go.dev/play/p/6L22CscJaNQ
 //
-//		logger := logs.New("[LOG]", "- {{{15:04:05}}}")
-//		logger.Flogf(file, "A log of one line. The number is %d", 3)
-//		logger.Flog(file, "The first line.\nThe second line.")
-//	}
+// ========== Example 3 ==========
 //
-//	// If you open the file example_3.txt after having executed this program, it will contain the same text as in the two examples above.
+// This example shows you how to temporarily redirect the log with [Logger.Flog]() and
+// [Logger.Flogf]().
 //
-// You can run theses examples by running 'go run github.com/eliotttak/go-logs/examples/exampleX' where X is the number of the example.
+// ----- Link to the file -----
+//
+// https://github.com/eliotttak/go-logs/blob/main/examples/example3/example3.go
+//
+// ----- Run -----
+//
+//	go run github.com/eliotttak/go-logs/examples/example3@latest
+//
+// Note: since we can't work with files in Go Playground, I didn't create a link for this example.
+//
+// ========== Example 4 ==========
+//
+// This example shows how to set a default writer to the logger using [Logger.SetDefaultWriter]().
+//
+// ----- Link to the file -----
+//
+// https://github.com/eliotttak/go-logs/blob/main/examples/example4/example4.go
+//
+// ----- Run -----
+//
+//	go run github.com/eliotttak/go-logs/examples/example4@latest
+//
+// Run it online at https://go.dev/play/p/Mn4FnyAMZgE
 package logs

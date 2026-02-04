@@ -30,9 +30,8 @@ import (
 
 var dateHourRegexp = regexp.MustCompile(`\{\{\{.*?\}\}\}`)
 
-// AddPrefixToEachLine adds the specified prefix to each line of s.
-// It puts a space between the prefix and the line of text.
-// If prefix is empty, it returns s.
+// AddPrefixToEachLine adds the specified prefix to each line of s. It puts a space between the
+// prefix and the line of text. If prefix is empty, it returns s.
 func AddPrefixToEachLine(s string, prefix string) string {
 	if prefix == "" {
 		return s
@@ -54,14 +53,15 @@ func AddPrefixToEachLine(s string, prefix string) string {
 	return newString.String()
 }
 
-// AddSuffixToEachLine adds the specified suffix to each line of s.
-// It pads the suffix to make it easily readable.
-// It puts a space between the line of text and the suffix.
-// If suffix is empty, it returns s.
+// AddSuffixToEachLine adds the specified suffix to each line of s. It pads the suffix to make it
+// easily readable. It puts a space between the line of text and the suffix. If suffix is empty, it
+// returns s.
 func AddSuffixToEachLine(s string, suffix string) string {
 	if suffix == "" {
 		return s
 	}
+
+	s = strings.ReplaceAll(s, "\r\n", "\n")
 
 	// Step 1: split the string to make a list of lines
 	splittedStrings := strings.SplitSeq(s, "\n")
@@ -94,9 +94,10 @@ func AddSuffixToEachLine(s string, suffix string) string {
 }
 
 // ParseLog creates a log string from a content string, a prefix and a suffix.
-// You can insert the timestamp by inserting a [time.Time.Format]() layout string
-// in triple curly braces (e.g. '{{{Mon. Jan. 2 2006 15:04:05}}}')
-// in the content, the prefix or the suffix.
+//
+// You can insert the timestamp by inserting a [time.Time.Format]() layout string in triple curly
+// braces (e.g. '{{{Mon. Jan. 2 2006 15:04:05}}}') in the content, the prefix or the suffix.
+//
 // It adds two new lines at the end to make a space between two logs.
 func ParseLog(s string, prefix string, suffix string) string {
 	prefixedStr := AddPrefixToEachLine(s, prefix)
@@ -106,34 +107,71 @@ func ParseLog(s string, prefix string, suffix string) string {
 	result.WriteString(prefixedSuffixedStr)
 
 	for dateHourRegexp.MatchString(result.String()) {
-		// fmt.Println("result =", result.String())
-
 		substr := dateHourRegexp.FindString(result.String())
-		// fmt.Println("substr =", substr)
 
 		layout := strings.ReplaceAll(strings.ReplaceAll(substr, "{", ""), "}", "")
-		// fmt.Println("layout =", layout)
 
 		formattedTime := time.Now().Local().Format(layout)
-		// fmt.Println("formattedTime =", formattedTime)
 
 		temp := result.String()
 		result.Reset()
 		result.WriteString(strings.Replace(temp, substr, formattedTime, 1))
 	}
-	// fmt.Println("result =", result.String())
 	result.WriteString("\n\n")
 
 	return result.String()
 }
 
-// Logger is a struct that represents one logger system. You should use a pointer and not the direct type.
+// Logger is a struct that represents one logger system. You should use a pointer and not the direct
+// type.
 type Logger struct {
 	// The prefix of each log. E.g.: "[ERROR]"
-	Prefix string
+	prefix string
 
 	// The suffix of each log. E.g.: "{{{Mon. Jan. 2 2006 15:04:05}}}"
-	Suffix string
+	suffix string
+
+	defaultWriter io.Writer
+}
+
+// SetDefaultWriter sets the default writer used by [Logger.Log]() and [Logger.Logf]() to w. It can
+// be changed at any time by calling back this method. If you don't define a default writer, the
+// default writer will be [os.Stdout]. It returns the logger to permise
+// chaining.
+func (l *Logger) SetDefaultWriter(w io.Writer) *Logger {
+	l.defaultWriter = w
+	return l
+}
+
+// SetPrefix sets the prefix of each line of log to prefix. It can be changed at any time by calling
+// back this method. If you don't define a prefix, it will be "". It returns the logger to permise
+// chaining.
+func (l *Logger) SetPrefix(prefix string) *Logger {
+	l.prefix = prefix
+	return l
+}
+
+// SetSuffix sets the suffix of each line of log to suffix. It can be changed at any time by calling
+// back this method. If you don't define a suffix, it will be "". It returns the logger to permise
+// chaining.
+func (l *Logger) SetSuffix(suffix string) *Logger {
+	l.suffix = suffix
+	return l
+}
+
+// GetDefaultWriter returns the current default writer of the logger.
+func (l *Logger) GetDefaultWriter() io.Writer {
+	return l.defaultWriter
+}
+
+// GetDefaultWriter returns the current prefix of the logger.
+func (l *Logger) GetPrefix() string {
+	return l.prefix
+}
+
+// GetDefaultWriter returns the current suffix of the logger.
+func (l *Logger) GetSuffix() string {
+	return l.suffix
 }
 
 // Slog works in 3 steps:
@@ -141,70 +179,62 @@ type Logger struct {
 //   - Parse it to a log string (with prefix and suffix)
 //   - Return this log string.
 //
-// For more info about how are the arguments
-// converted into a string, see [fmt.Sprint]().
+// For more info about how are the arguments converted into a string, see [fmt.Sprint]().
 //
-// For more info about how is the string parsed
-// into a log, see [ParseLog]().
+// For more info about how is the string parsed into a log, see [ParseLog]().
 func (l *Logger) Slog(a ...any) string {
-	return ParseLog(fmt.Sprint(a...), l.Prefix, l.Suffix)
+	return ParseLog(fmt.Sprint(a...), l.prefix, l.suffix)
 }
 
-// Slogf is similar to [Logger.Slog]() but instead of just
-// concatenate the arguments, it takes a format string.
-// It uses the verbs of [fmt.Print]().
+// Slogf is similar to [Logger.Slog]() but instead of just concatenate the arguments, it takes a
+// format string. It uses the verbs of [fmt.Print]().
 //
-// For more info about how are the arguments
-// converted into a string, see [fmt.Sprintf]().
+// For more info about how are the arguments converted into a string, see [fmt.Sprintf]().
 //
-// For more info about how is the string parsed
-// into a log, see [ParseLog]().
+// For more info about how is the string parsed into a log, see [ParseLog]().
 func (l *Logger) Slogf(format string, a ...any) string {
 	return l.Slog(fmt.Sprintf(format, a...))
 }
 
-// Flog is similar to [Logger.Slog]() but writes the output
-// into w. It returns the same values as [fmt.Fprint]().
+// Flog is similar to [Logger.Slog]() but writes the output into w. It returns the same values as
+// [fmt.Fprint]().
 //
-// For more info about how are the arguments parsed into a
-// log string, see [Logger.Slog]().
+// For more info about how are the arguments parsed into a log string, see [Logger.Slog]().
 //
-// For more info about how is this string written into w,
-// see [fmt.Fprint]().
+// For more info about how is this string written into w, see [fmt.Fprint]().
 func (l *Logger) Flog(w io.Writer, a ...any) (int, error) {
 	return fmt.Fprint(w, l.Slog(a...))
 }
 
-// Flog is similar to [Logger.Slogf]() but writes the output
-// into w. It returns the same values as [fmt.Fprintf]().
+// Flog is similar to [Logger.Slogf]() but writes the output into w. It returns the same values as
+// [fmt.Fprintf]().
 //
-// For more info about how are the arguments parsed into a
-// log string, see [Logger.Slogf]().
+// For more info about how are the arguments parsed into a log string, see [Logger.Slogf]().
 //
-// For more info about how is this string written into w,
-// see [fmt.Fprint]().
+// For more info about how is this string written into w, see [fmt.Fprint]().
 func (l *Logger) Flogf(w io.Writer, format string, a ...any) (int, error) {
 	return fmt.Fprint(w, l.Slogf(format, a...))
 }
 
-// Log is similar to [Logger.Flog]() used with [os.Stdout].
+// Log is similar to [Logger.Flog]() used with the default writer.
 //
 // For more info about how the arguments are displayed, see [Logger.Flog]().
 func (l *Logger) Log(a ...any) (int, error) {
-	return l.Flog(os.Stdout, a...)
+	return l.Flog(l.defaultWriter, a...)
 }
 
-// Logf is similar to [Logger.Flogf]() used with [os.Stdout].
+// Logf is similar to [Logger.Flogf]() used with the default writer.
 //
 // For more info about how the arguments are displayed, see [Logger.Flogf]().
 func (l *Logger) Logf(format string, a ...any) (int, error) {
-	return l.Flogf(os.Stdout, format, a...)
+	return l.Flogf(l.defaultWriter, format, a...)
 }
 
 // New creates and returns a pointer to a new [Logger] instance.
-func New(prefix string, suffix string) *Logger {
+func New() *Logger {
 	return &Logger{
-		Prefix: prefix,
-		Suffix: suffix,
+		prefix:        "",
+		suffix:        "",
+		defaultWriter: os.Stdout,
 	}
 }

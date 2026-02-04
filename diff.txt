@@ -1,0 +1,410 @@
+diff --git a/doc.go b/doc.go
+index c993761..85ed32f 100644
+--- a/doc.go
++++ b/doc.go
+@@ -14,76 +14,71 @@
+ // You should have received a copy of the GNU Lesser General Public License along with
+ // go-logs. If not, see <https://www.gnu.org/licenses/>.
+ 
+-// Package logs implements a basic logger system. Each log is a
+-// separate paragraph, and each line has a prefix and a suffix
+-// (not in the lines separating two paragraphs). The suffix are
+-// padded for only one log. You can insert the timestamp in the
+-// content, prefix or suffix of a log by inserting a
+-// [time.Time.Format]() layout string in triple curly braces
+-// (e.g. '{{{Mon. Jan. 2 2006 15:04:05}}}'). You can add colors
+-// with ANSI code colors (see [github.com/eliotttak/go-ansi-colors]).
++// Package logs implements a basic logging system. Each log is a separate paragraph, and each line
++// can have a prefix and a suffix (not in the lines separating two paragraphs). The suffix are
++// padded for only one log. You can insert the timestamp in the content, prefix or suffix of a log
++// by inserting a [time.Time.Format]() layout string in triple curly braces (e.g.
++// '{{{Mon. Jan. 2 2006 15:04:05}}}'). You can change the default writer of the output, the prefix
++// and the suffix.
+ //
+-// Example 1 - Basics (usage, prefix, suffix, timestamp):
++// ========== Example 1 ==========
+ //
+-//	package main
++// This example shows you the basics of `go-logs`:
+ //
+-//	import "github.com/eliotttak/go-logs"
++//   - Create a logger, with a prefix and a suffix
++//   - Logging with [Logger.Log]() and [Logger.Logf]()
+ //
+-//	func main() {
+-//		logger := logs.New("[LOG]", "- {{{15:04:05}}}")
+-//		logger.Logf("A log of one line. The number is %d", 3)
+-//		logger.Log("The first line.\nThe second line.")
+-//	}
++// ----- Link to the file -----
+ //
+-//	// Output:
+-//	//
+-//	// [LOG] A log of one line. The number is 3 - 12:08:34
+-//	//
+-//	// [LOG] The first line.  - 12:08:34
+-//	// [LOG] The second line. - 12:08:34
++// https://github.com/eliotttak/go-logs/blob/main/examples/example1/example1.go
+ //
+-// Example 2 - In a string:
++// ----- Run -----
+ //
+-//	package main
++//	go run github.com/eliotttak/go-logs/examples/example1@latest
+ //
+-//	import (
+-//		"github.com/eliotttak/go-logs"
+-//		"fmt"
+-//	)
++// Run it online at https://go.dev/play/p/1TyDL0V84jJ
+ //
+-//	func main() {
+-//		logger := logs.New("[LOG]", "- {{{15:04:05}}}")
+-//		s := logger.Slogf("A log of one line. The number is %d", 3)
+-//		s += logger.Slog("The first line.\nThe second line.")
+-//		fmt.Print(s)
+-//	}
++// ========== Example 2 ==========
+ //
+-//	// The output is the same as above, but you can see that the log passes by a string before being displayed.
++// This example shows you how to log in a string using [Logger.Slog]
++// and [Logger.Slogf].
+ //
+-// Example 3 - In a buffer (file, STDERR, etc.):
++// ----- Link to the file -----
+ //
+-//	package main
++// https://github.com/eliotttak/go-logs/blob/main/examples/example3/example2.go
+ //
+-//	import (
+-//		"log"
+-//		"os"
++// ----- Run -----
+ //
+-//		"github.com/eliotttak/go-logs"
+-//	)
++//	go run github.com/eliotttak/go-logs/examples/example2@latest
+ //
+-//	func main() {
+-//		file, err := os.Create("example_3.txt")
+-//		if err != nil {
+-//			log.Fatal(err)
+-//		}
+-//		defer file.Close()
++// Run it online at https://go.dev/play/p/6L22CscJaNQ
+ //
+-//		logger := logs.New("[LOG]", "- {{{15:04:05}}}")
+-//		logger.Flogf(file, "A log of one line. The number is %d", 3)
+-//		logger.Flog(file, "The first line.\nThe second line.")
+-//	}
++// ========== Example 3 ==========
+ //
+-//	// If you open the file example_3.txt after having executed this program, it will contain the same text as in the two examples above.
++// This example shows you how to temporarily redirect the log with [Logger.Flog]() and
++// [Logger.Flogf]().
+ //
+-// You can run theses examples by running 'go run github.com/eliotttak/go-logs/examples/exampleX' where X is the number of the example.
++// ----- Link to the file -----
++//
++// https://github.com/eliotttak/go-logs/blob/main/examples/example3/example3.go
++//
++// ----- Run -----
++//
++//	go run github.com/eliotttak/go-logs/examples/example3@latest
++//
++// Note: since we can't work with files in Go Playground, I didn't create a link for this example.
++//
++// ========== Example 4 ==========
++//
++// This example shows how to set a default writer to the logger using [Logger.SetDefaultWriter]().
++//
++// ----- Link to the file -----
++//
++// https://github.com/eliotttak/go-logs/blob/main/examples/example4/example4.go
++//
++// ----- Run -----
++//
++//	go run github.com/eliotttak/go-logs/examples/example4@latest
++//
++// Run it online at https://go.dev/play/p/Mn4FnyAMZgE
+ package logs
+diff --git a/examples/example1/example1.go b/examples/example1/example1.go
+index 69b8e29..126bcf0 100644
+--- a/examples/example1/example1.go
++++ b/examples/example1/example1.go
+@@ -3,7 +3,10 @@ package main
+ import "github.com/eliotttak/go-logs"
+ 
+ func main() {
+-	logger := logs.New("[LOG]", "- {{{15:04:05}}}")
+-	logger.Logf("A log of one line. The number is %d", 3)
++	logger := logs.New().
++		SetPrefix("[LOG]").
++		SetSuffix("- {{{15:04:05}}}")
++
++	logger.Logf("A log of one line. %d + %d = %d", 2, 3, 2+3)
+ 	logger.Log("The first line.\nThe second line.")
+ }
+diff --git a/examples/example2/example2.go b/examples/example2/example2.go
+index ec45f31..a62d906 100644
+--- a/examples/example2/example2.go
++++ b/examples/example2/example2.go
+@@ -7,8 +7,11 @@ import (
+ )
+ 
+ func main() {
+-	logger := logs.New("[LOG]", "- {{{15:04:05}}}")
+-	s := logger.Slogf("A log of one line. The number is %d", 3)
++	logger := logs.New().
++		SetPrefix("[LOG]").
++		SetSuffix("- {{{15:04:05}}}")
++
++	s := logger.Slogf("A log of one line. %d + %d = %d", 2, 3, 2+3)
+ 	s += logger.Slog("The first line.\nThe second line.")
+ 	fmt.Print(s)
+ }
+diff --git a/examples/example3/example3.go b/examples/example3/example3.go
+index 91cf4ca..8a8e6ce 100644
+--- a/examples/example3/example3.go
++++ b/examples/example3/example3.go
+@@ -14,7 +14,11 @@ func main() {
+ 	}
+ 	defer file.Close()
+ 
+-	logger := logs.New("[LOG]", "- {{{15:04:05}}}")
+-	logger.Flogf(file, "A log of one line. The number is %d", 3)
+-	logger.Flog(file, "The first line.\nThe second line.")
++	logger := logs.New().
++		SetPrefix("[LOG]").
++		SetSuffix("- {{{15:04:05}}}")
++
++	logger.Log("This log will be written to the standard output.")
++	logger.Log("This one also.")
++	logger.Flog(file, "This one will be written to './example_3.txt'.")
+ }
+diff --git a/go.mod b/go.mod
+index 53a406d..229ac7d 100644
+--- a/go.mod
++++ b/go.mod
+@@ -1,3 +1 @@
+ module github.com/eliotttak/go-logs
+-
+-go 1.24.0
+diff --git a/logs.go b/logs.go
+index 8ae1894..4dd271f 100644
+--- a/logs.go
++++ b/logs.go
+@@ -30,9 +30,8 @@ import (
+ 
+ var dateHourRegexp = regexp.MustCompile(`\{\{\{.*?\}\}\}`)
+ 
+-// AddPrefixToEachLine adds the specified prefix to each line of s.
+-// It puts a space between the prefix and the line of text.
+-// If prefix is empty, it returns s.
++// AddPrefixToEachLine adds the specified prefix to each line of s. It puts a space between the
++// prefix and the line of text. If prefix is empty, it returns s.
+ func AddPrefixToEachLine(s string, prefix string) string {
+ 	if prefix == "" {
+ 		return s
+@@ -54,10 +53,9 @@ func AddPrefixToEachLine(s string, prefix string) string {
+ 	return newString.String()
+ }
+ 
+-// AddSuffixToEachLine adds the specified suffix to each line of s.
+-// It pads the suffix to make it easily readable.
+-// It puts a space between the line of text and the suffix.
+-// If suffix is empty, it returns s.
++// AddSuffixToEachLine adds the specified suffix to each line of s. It pads the suffix to make it
++// easily readable. It puts a space between the line of text and the suffix. If suffix is empty, it
++// returns s.
+ func AddSuffixToEachLine(s string, suffix string) string {
+ 	if suffix == "" {
+ 		return s
+@@ -93,11 +91,10 @@ func AddSuffixToEachLine(s string, suffix string) string {
+ 	return newString.String()
+ }
+ 
+-// ParseLog creates a log string from a content string, a prefix and a suffix.
+-// You can insert the timestamp by inserting a [time.Time.Format]() layout string
+-// in triple curly braces (e.g. '{{{Mon. Jan. 2 2006 15:04:05}}}')
+-// in the content, the prefix or the suffix.
+-// It adds two new lines at the end to make a space between two logs.
++// ParseLog creates a log string from a content string, a prefix and a suffix. You can insert the
++// timestamp by inserting a [time.Time.Format]() layout string in triple curly braces (e.g.
++// '{{{Mon. Jan. 2 2006 15:04:05}}}') in the content, the prefix or the suffix. It adds two new
++// lines at the end to make a space between two logs.
+ func ParseLog(s string, prefix string, suffix string) string {
+ 	prefixedStr := AddPrefixToEachLine(s, prefix)
+ 	prefixedSuffixedStr := AddSuffixToEachLine(prefixedStr, suffix)
+@@ -106,34 +103,68 @@ func ParseLog(s string, prefix string, suffix string) string {
+ 	result.WriteString(prefixedSuffixedStr)
+ 
+ 	for dateHourRegexp.MatchString(result.String()) {
+-		// fmt.Println("result =", result.String())
+-
+ 		substr := dateHourRegexp.FindString(result.String())
+-		// fmt.Println("substr =", substr)
+ 
+ 		layout := strings.ReplaceAll(strings.ReplaceAll(substr, "{", ""), "}", "")
+-		// fmt.Println("layout =", layout)
+ 
+ 		formattedTime := time.Now().Local().Format(layout)
+-		// fmt.Println("formattedTime =", formattedTime)
+ 
+ 		temp := result.String()
+ 		result.Reset()
+ 		result.WriteString(strings.Replace(temp, substr, formattedTime, 1))
+ 	}
+-	// fmt.Println("result =", result.String())
+ 	result.WriteString("\n\n")
+ 
+ 	return result.String()
+ }
+ 
+-// Logger is a struct that represents one logger system. You should use a pointer and not the direct type.
++// Logger is a struct that represents one logger system. You should use a pointer and not the direct
++// type.
+ type Logger struct {
+ 	// The prefix of each log. E.g.: "[ERROR]"
+-	Prefix string
++	prefix string
+ 
+ 	// The suffix of each log. E.g.: "{{{Mon. Jan. 2 2006 15:04:05}}}"
+-	Suffix string
++	suffix string
++
++	defaultWriter io.Writer
++}
++
++// SetDefaultWriter sets the default writer used by [Logger.Log]() and [Logger.Logf]() to w. It can
++// be changed at any time by calling back this method. If you don't define a default writer, the
++// default writer will be [os.Stdout].
++func (l *Logger) SetDefaultWriter(w io.Writer) *Logger {
++	l.defaultWriter = w
++	return l
++}
++
++// SetPrefix sets the prefix of each line of log to prefix. It can be changed at any time by calling
++// back this method. If you don't define a prefix, it will be "".
++func (l *Logger) SetPrefix(prefix string) *Logger {
++	l.prefix = prefix
++	return l
++}
++
++// SetSuffix sets the suffix of each line of log to suffix. It can be changed at any time by calling
++// back this method. If you don't define a suffix, it will be "".
++func (l *Logger) SetSuffix(suffix string) *Logger {
++	l.suffix = suffix
++	return l
++}
++
++// GetDefaultWriter returns the current default writer of the logger.
++func (l *Logger) GetDefaultWriter() io.Writer {
++	return l.defaultWriter
++}
++
++// GetDefaultWriter returns the current prefix of the logger.
++func (l *Logger) GetPrefix() string {
++	return l.prefix
++}
++
++// GetDefaultWriter returns the current suffix of the logger.
++func (l *Logger) GetSuffix() string {
++	return l.suffix
+ }
+ 
+ // Slog works in 3 steps:
+@@ -141,70 +172,62 @@ type Logger struct {
+ //   - Parse it to a log string (with prefix and suffix)
+ //   - Return this log string.
+ //
+-// For more info about how are the arguments
+-// converted into a string, see [fmt.Sprint]().
++// For more info about how are the arguments converted into a string, see [fmt.Sprint]().
+ //
+-// For more info about how is the string parsed
+-// into a log, see [ParseLog]().
++// For more info about how is the string parsed into a log, see [ParseLog]().
+ func (l *Logger) Slog(a ...any) string {
+-	return ParseLog(fmt.Sprint(a...), l.Prefix, l.Suffix)
++	return ParseLog(fmt.Sprint(a...), l.prefix, l.suffix)
+ }
+ 
+-// Slogf is similar to [Logger.Slog]() but instead of just
+-// concatenate the arguments, it takes a format string.
+-// It uses the verbs of [fmt.Print]().
++// Slogf is similar to [Logger.Slog]() but instead of just concatenate the arguments, it takes a
++// format string. It uses the verbs of [fmt.Print]().
+ //
+-// For more info about how are the arguments
+-// converted into a string, see [fmt.Sprintf]().
++// For more info about how are the arguments converted into a string, see [fmt.Sprintf]().
+ //
+-// For more info about how is the string parsed
+-// into a log, see [ParseLog]().
++// For more info about how is the string parsed into a log, see [ParseLog]().
+ func (l *Logger) Slogf(format string, a ...any) string {
+ 	return l.Slog(fmt.Sprintf(format, a...))
+ }
+ 
+-// Flog is similar to [Logger.Slog]() but writes the output
+-// into w. It returns the same values as [fmt.Fprint]().
++// Flog is similar to [Logger.Slog]() but writes the output into w. It returns the same values as
++// [fmt.Fprint]().
+ //
+-// For more info about how are the arguments parsed into a
+-// log string, see [Logger.Slog]().
++// For more info about how are the arguments parsed into a log string, see [Logger.Slog]().
+ //
+-// For more info about how is this string written into w,
+-// see [fmt.Fprint]().
++// For more info about how is this string written into w, see [fmt.Fprint]().
+ func (l *Logger) Flog(w io.Writer, a ...any) (int, error) {
+ 	return fmt.Fprint(w, l.Slog(a...))
+ }
+ 
+-// Flog is similar to [Logger.Slogf]() but writes the output
+-// into w. It returns the same values as [fmt.Fprintf]().
++// Flog is similar to [Logger.Slogf]() but writes the output into w. It returns the same values as
++// [fmt.Fprintf]().
+ //
+-// For more info about how are the arguments parsed into a
+-// log string, see [Logger.Slogf]().
++// For more info about how are the arguments parsed into a log string, see [Logger.Slogf]().
+ //
+-// For more info about how is this string written into w,
+-// see [fmt.Fprint]().
++// For more info about how is this string written into w, see [fmt.Fprint]().
+ func (l *Logger) Flogf(w io.Writer, format string, a ...any) (int, error) {
+ 	return fmt.Fprint(w, l.Slogf(format, a...))
+ }
+ 
+-// Log is similar to [Logger.Flog]() used with [os.Stdout].
++// Log is similar to [Logger.Flog]() used with the default writer.
+ //
+ // For more info about how the arguments are displayed, see [Logger.Flog]().
+ func (l *Logger) Log(a ...any) (int, error) {
+-	return l.Flog(os.Stdout, a...)
++	return l.Flog(l.defaultWriter, a...)
+ }
+ 
+-// Logf is similar to [Logger.Flogf]() used with [os.Stdout].
++// Logf is similar to [Logger.Flogf]() used with the default writer.
+ //
+ // For more info about how the arguments are displayed, see [Logger.Flogf]().
+ func (l *Logger) Logf(format string, a ...any) (int, error) {
+-	return l.Flogf(os.Stdout, format, a...)
++	return l.Flogf(l.defaultWriter, format, a...)
+ }
+ 
+ // New creates and returns a pointer to a new [Logger] instance.
+-func New(prefix string, suffix string) *Logger {
++func New() *Logger {
+ 	return &Logger{
+-		Prefix: prefix,
+-		Suffix: suffix,
++		prefix:        "",
++		suffix:        "",
++		defaultWriter: os.Stdout,
+ 	}
+ }
